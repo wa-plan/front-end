@@ -1,92 +1,87 @@
 import 'package:flutter/material.dart';
-import 'widgets/week_calender.dart';
+//import 'package:flutter_application_1/widgets/week_calender.dart';
+//import 'package:flutter_application_1/widgets/month_calender.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
-void main() => runApp(MyApp());
+//import 'package:table_calendar/table_calendar.dart';
 
-class MyApp extends StatelessWidget {
+import 'widgets/month_calendar.dart';
+import 'widgets/week_calendar.dart';
+
+void main() async {
+  await initializeDateFormatting(); 
+  runApp(const MyApp());}
+
+class MyApp extends StatefulWidget {
+  const MyApp({super.key});
+
+  @override
+  State<MyApp> createState() => _MyAppState();
+}
+
+class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return const MaterialApp(
       title: 'TDYdomino',
-      theme: ThemeData(primaryColor: Colors.white),
       debugShowCheckedModeBanner: false,
       home: Grade(),
     );
   }
 }
 
-class Grade extends StatelessWidget {
+
+
+class Grade extends StatefulWidget {
+  const Grade({super.key});
+
+  @override
+  State<Grade> createState() => _GradeState();
+}
+
+class _GradeState extends State<Grade> {
+  bool isWeekCalendarVisible=true;
+
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('오늘의 도미노',
-        style: TextStyle(color: Colors.white,
+        title: Padding(
+          padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 0.0),
+          child: Text('오늘의 도미노',
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: MediaQuery.of(context).size.width * 0.06,
+            fontWeight: FontWeight.w600
+          ),
+          ),
         ),
+      backgroundColor:const Color(0xff262626),
         ),
-        backgroundColor: Colors.black,
-        ),
-      backgroundColor: Colors.red,
-      body: 
-      SingleChildScrollView(
-        child: Column(
+      backgroundColor: const Color(0xff262626),
+
+
+      body: Column(
         children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(30.0, 40.0, 30.0, 0.0),
-          ),   
-          WeekCalendar()
-          /*Expanded(
-            child: TableCalendar(
-            firstDay: DateTime.utc(2010, 10, 16),
-            lastDay: DateTime.utc(2030, 3, 14),
-            focusedDay: DateTime.now(),
-            availableCalendarFormats: const {
-              CalendarFormat.month: '월',
-              CalendarFormat.week: '주',
-              },
-            headerStyle: HeaderStyle(
-              titleCentered: true,
-              titleTextStyle: TextStyle(color: Colors.white),
+          if (isWeekCalendarVisible) const WeekCalendar(),
+          if (!isWeekCalendarVisible) const MonthCalendar(),
+          ElevatedButton(
+            onPressed: () {
+              setState(() {
+                isWeekCalendarVisible = !isWeekCalendarVisible;
+              });
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xff262626),
+              elevation: 0.0,   //버튼을 위 아이콘 또는 아래 아이콘으로 바꾸기
             ),
-            calendarStyle: CalendarStyle(
-              weekendTextStyle: TextStyle(
-              fontSize: MediaQuery.of(context).size.width * 0.035,
-               color: Colors.white,
-              ),
-            defaultTextStyle: TextStyle(
-              fontSize: MediaQuery.of(context).size.width * 0.035,
-              color: Colors.white,
-              ),
-            ),
-            ),
-          ),*/
-          ],
-        ),
-      
-      ),
-      bottomNavigationBar: BottomNavigationBar(
-        selectedItemColor: Colors.yellow,
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: [
-          BottomNavigationBarItem(
-            icon: Icon(Icons.flag),
-            label: '나의 목표',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.access_time_outlined),
-            label: '도미노 플랜',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.home),
-            label: '오늘의 도미노',
-          ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.settings),
-            label: '설정',
-          ),
+            child: Icon(isWeekCalendarVisible ? Icons.arrow_drop_down : Icons.arrow_drop_up,
+            color: Colors.white), 
+            
+          )
         ],
       ),
-    );
+      );
   }
 }
