@@ -66,7 +66,7 @@ _userProvider.email = _emailConroller.text;
     /*  번호 검사
      if (!regExp.hasMatch(_emailConroller.text)) {
       setState(() {
-        _errorMsg = "올바르게 이메일을 입력하세요";
+        _errorMsg = "번호가 존재하지 않아요";
       });
     } else {
       setState(() {
