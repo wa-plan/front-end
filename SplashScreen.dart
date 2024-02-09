@@ -19,7 +19,7 @@ class SplashScreen extends StatelessWidget {
 						children: [
 						//다수의 위젯을 입력하는 children 매개변수
 							Image.asset(
-								'Domino/logo.png',
+								'SplashImg.png',
 							),
 						],
 					),
