@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/add_page1.dart';
-import 'package:flutter_application_1/widgets/month_calendar.dart';
+import 'package:flutter_application_1/widgets/add_calendar.dart';
+import 'package:flutter_application_1/widgets/repeat_settings.dart';
 
 class AddPage2 extends StatefulWidget {
   const AddPage2({super.key});
@@ -10,8 +11,7 @@ class AddPage2 extends StatefulWidget {
 }
 
 class _AddPage2State extends State<AddPage2> {
-  bool isChecked=false;
-
+  bool switchValue=false;
 
   @override
   Widget build(BuildContext context) {
@@ -58,36 +58,53 @@ class _AddPage2State extends State<AddPage2> {
           const SizedBox(
             height: 20,),
           
-          TextField(
+          const TextField(
             style: TextStyle(
               fontSize: 16,
               color: Colors.white),
             decoration: InputDecoration(
               
               border: OutlineInputBorder(),
-              suffixIcon: Icon(Icons.close),
+              suffixIcon: Icon(Icons.close,
+              ),
                 
             ),
           ),
 
-          SizedBox(
-            height: 40,
+          const SizedBox(
+            height: 20,
           ),
 
-          Text('언제 실행하고 싶나요?', 
+          const Text('언제 실행하고 싶나요?', 
           style: TextStyle(
             color: Colors.white,
             fontSize: 19,
             fontWeight: FontWeight.bold
           ),),            
 
-          MonthCalendar(),
+          AddCalendar(),
 
-          Switch(
-            value: isChecked, 
-            onChanged: (value) {
-              
-            },),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,         //오른쪽 정렬
+            children: [
+              const Text('반복하기',
+              style: TextStyle(
+                color: Colors.white
+              ),),
+              const SizedBox(width: 10),
+              Switch(
+                value: switchValue,
+                onChanged: (value) {
+                  setState(() {
+                    switchValue = value;
+                  }
+                  );
+                },
+                ),
+            ],
+          ),
+
+          if (switchValue) const RepeatSettings(),
           
 
           Row(
@@ -115,27 +132,27 @@ class _AddPage2State extends State<AddPage2> {
               ),//취소 버튼
 
 
-        TextButton(     //임의버튼(만다라트 대용버튼)
-            onPressed: () {
-                  Navigator.push(
-                    context, 
-                    MaterialPageRoute(builder: (context) => const AddPage2(),)
-                    );
-                }, 
-            style: TextButton.styleFrom(
-              backgroundColor: const Color(0xff131313),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(6.0)
-              )
-            ),
-            child: const Text('완료',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 15
+          TextButton(     //임의버튼(만다라트 대용버튼)
+              onPressed: () {
+                    Navigator.push(
+                      context, 
+                      MaterialPageRoute(builder: (context) => const AddPage2(),)
+                      );
+                  }, 
+              style: TextButton.styleFrom(
+                backgroundColor: const Color(0xff131313),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(6.0)
+                )
               ),
-            ),
-            
-          )
+              child: const Text('완료',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 15
+                ),
+              ),
+              
+            )
           ]
           )
 
