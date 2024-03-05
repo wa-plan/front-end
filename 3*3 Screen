@@ -1,0 +1,77 @@
+import 'package:flutter/material.dart';
+
+void main() {
+  runApp(App());
+}
+
+class App extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        body: Column(
+          children: [
+            Expanded(
+              flex: 2,
+              child: Container(
+                color: Colors.deepPurple,
+                alignment: Alignment(1.0,1.0),
+                child: Text(
+                "플랜 만들기",
+                style: TextStyle(
+                color: Colors.white,
+                fontSize: 50,
+                ))
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Container(
+                color: Colors.pink,
+              ),
+            ),
+            Expanded(
+              flex: 7,
+              child: Container(
+                color: Colors.deepPurple,
+                padding: EdgeInsets.all(9.0),
+                child: GridView.builder(
+                  shrinkWrap:true,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                  ),
+                  itemBuilder: (BuildContext context, int index) {
+                    return Container(
+                      color: Colors.white, 
+                      margin: EdgeInsets.all(2.0), 
+                      child: TextField(
+                      decoration: InputDecoration(
+                        
+                        )
+                      ),
+                    );
+                  },
+                  itemCount: 9, 
+                ),
+              ),
+            ),
+            Expanded(
+              flex: 3,
+              child: Container(
+                color: Colors.pink,
+              ),
+            ),
+          ],
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: [
+            BottomNavigationBarItem(icon: const Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: const Icon(Icons.home), label: 'Home'),
+            BottomNavigationBarItem(icon: const Icon(Icons.home), label: 'Home'),
+          ],
+        ),
+      ),
+    );
+  }
+}
