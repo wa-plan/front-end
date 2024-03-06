@@ -194,16 +194,45 @@ class _EventCalendarState extends State<EventCalendar> {
                                 ),
                               ],
                             ),
+                            const SizedBox(
+                              width: 50,
+                            ),
                             IconButton(
                                 onPressed: () {
                                   setState(() {
-                                    value[index].isButtonClicked = !value[index]
-                                        .isButtonClicked; // 해당 Event 객체의 버튼 상태 변경
+                                    value[index].didZero = !value[index]
+                                        .didZero; // 해당 Event 객체의 버튼 상태 변경
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.clear_outlined,
+                                  color: value[index].didZero
+                                      ? Colors.yellow
+                                      : const Color(0xff5C5C5C),
+                                )),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    value[index].didHalf = !value[index]
+                                        .didHalf; // 해당 Event 객체의 버튼 상태 변경
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.change_history_outlined,
+                                  color: value[index].didHalf
+                                      ? Colors.yellow
+                                      : const Color(0xff5C5C5C),
+                                )),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    value[index].didAll = !value[index]
+                                        .didAll; // 해당 Event 객체의 버튼 상태 변경
                                   });
                                 },
                                 icon: Icon(
                                   Icons.circle_outlined,
-                                  color: value[index].isButtonClicked
+                                  color: value[index].didAll
                                       ? Colors.yellow
                                       : const Color(0xff5C5C5C),
                                 ))
@@ -222,9 +251,15 @@ class _EventCalendarState extends State<EventCalendar> {
 
 class Event {
   final String title;
-  bool isButtonClicked; // 버튼 상태를 저장하는 필드 추가
+  bool didZero, didHalf, didAll; // 버튼 상태를 저장하는 필드 추가
 
-  Event(this.title, {this.isButtonClicked = false}); // 기본값으로 false 설정
+  Event(
+    this.title, {
+    this.didZero = false,
+    this.didHalf = false,
+    this.didAll = false,
+  }); // {중괄호} 안의 인자는 선택적 매개변수로 기본값을 설정할 수 있다.
+  // 선택적 매개변수의 값을 지정하지 않으면 기본값이 사용됨
 
   @override
   String toString() => title;
