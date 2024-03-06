@@ -15,6 +15,7 @@ class _EventCalendarState extends State<EventCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
+  bool isClicked = false;
 
   late final ValueNotifier<List<Event>> _selectedEvents;
 
@@ -47,18 +48,6 @@ class _EventCalendarState extends State<EventCalendar> {
       _selectedEvents.value = _getEventsForDay(selectedDay);
     }
   }
-
-  /*Map<DateTime, List<Event>> eventSource = {
-    DateTime.utc(2024, 3, 13): [Event('a', 'a', 'title', content: 'a')],
-    DateTime.utc(2024, 3, 14): [Event('b', 'b', 'title', content: 'b')],
-  };
-  final events = LinkedHashMap(
-    equals: isSameDay,
-  )..addAll(eventSource);
-  List<Event> _getEventsForDay(DateTime day) {
-    return events[day] ??
-        []; //events[day]가 null이면 []를 반환하고 null이 아니면 events[day] 반환하기
-  }*/
 
   @override
   Widget build(BuildContext context) {
@@ -172,18 +161,54 @@ class _EventCalendarState extends State<EventCalendar> {
                   itemCount: value.length,
                   itemBuilder: (context, index) {
                     return Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 12.0,
-                        vertical: 4.0,
-                      ),
-                      decoration: BoxDecoration(
-                        border: Border.all(),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: ListTile(
-                        title: Text('${value[index]}'),
-                      ),
-                    );
+                        height: 70,
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 12.0,
+                          vertical: 4.0,
+                        ),
+                        /*decoration: BoxDecoration(
+                          border: Border.all(),
+                          borderRadius: BorderRadius.circular(12.0),
+                        ),*/
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 22,
+                              height: 55,
+                              margin:
+                                  const EdgeInsets.symmetric(horizontal: 20),
+                              decoration: BoxDecoration(
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.circular(4)),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Money',
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                                Text(
+                                  '${value[index]}',
+                                  style: const TextStyle(color: Colors.white),
+                                ),
+                              ],
+                            ),
+                            IconButton(
+                                onPressed: () {
+                                  setState(() {
+                                    value[index].isButtonClicked = !value[index]
+                                        .isButtonClicked; // 해당 Event 객체의 버튼 상태 변경
+                                  });
+                                },
+                                icon: Icon(
+                                  Icons.circle_outlined,
+                                  color: value[index].isButtonClicked
+                                      ? Colors.yellow
+                                      : const Color(0xff5C5C5C),
+                                ))
+                          ],
+                        ));
                   },
                 );
               }
@@ -197,8 +222,9 @@ class _EventCalendarState extends State<EventCalendar> {
 
 class Event {
   final String title;
+  bool isButtonClicked; // 버튼 상태를 저장하는 필드 추가
 
-  const Event(this.title);
+  Event(this.title, {this.isButtonClicked = false}); // 기본값으로 false 설정
 
   @override
   String toString() => title;
@@ -215,8 +241,8 @@ final _kEventSource = {
         item % 4 + 1, (index) => Event('Event $item | ${index + 1}'))
 }..addAll({
     kToday: [
-      const Event('Today\'s Event 1'),
-      const Event('Today\'s Event 2'),
+      Event('Today\'s Event 1'),
+      Event('Today\'s Event 2'),
     ],
   });
 int getHashCode(DateTime key) {
