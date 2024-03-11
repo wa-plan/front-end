@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_application_1/pages/add_page1.dart';
+import 'package:flutter_application_1/repository/db_helper.dart';
 import 'package:flutter_application_1/widgets/add_calendar.dart';
 import 'package:flutter_application_1/widgets/repeat_settings.dart';
-import 'package:flutter_application_1/pages/main_added_page.dart';
+import 'package:flutter_application_1/main.dart';
 
 class AddPage2 extends StatefulWidget {
   const AddPage2({super.key});
@@ -15,6 +16,11 @@ class _AddPage2State extends State<AddPage2> {
   bool switchValue = false;
   final formKey = GlobalKey<FormState>();
   String dominoValue = '';
+  late DateTime pickedDate;
+  //final DatabaseHelper dbHelper = DatabaseHelper();
+  late final DatabaseHelper dbHelper =
+      DatabaseHelper(); // dbHelper를 선언과 동시에 초기화
+  late Future<List<Domino>> dominos;
   TextEditingController dominoController =
       TextEditingController(text: "저금"); //텍스트폼필드에 기본으로 들어갈 초기 텍스트 값
 
@@ -37,6 +43,13 @@ class _AddPage2State extends State<AddPage2> {
               },
               icon: const Icon(Icons.clear_outlined))),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    pickedDate = AddCalendarState().pickedDate;
+    dominos = dbHelper.getDominos();
   }
 
   @override
@@ -98,34 +111,6 @@ class _AddPage2State extends State<AddPage2> {
                   },
                 ),
               ),
-              /*Form(
-                  key: formKey,
-                  child: TextFormField(
-                    validator: (value) {
-                      assert(value != null);
-                      if (value == null) {
-                        return '1자 이상 입력해주세요.';
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      setState(() {
-                        dominoValue = value!;
-                      });
-                    },
-                    decoration:
-                        const InputDecoration(border: OutlineInputBorder()),
-                    style: const TextStyle(fontSize: 16, color: Colors.white),
-                  )),
-              const TextField(
-                style: TextStyle(fontSize: 16, color: Colors.white),
-                decoration: InputDecoration(
-                  border: OutlineInputBorder(),
-                  suffixIcon: Icon(
-                    Icons.close,
-                  ),
-                ),
-              ),*/
               const SizedBox(
                 height: 20,
               ),
@@ -178,11 +163,16 @@ class _AddPage2State extends State<AddPage2> {
                 TextButton(
                   //임의버튼(만다라트 대용버튼)
                   onPressed: () async {
+                    String content =
+                        dominoController.text; // 텍스트 필드에서 입력된 내용을 가져옴
                     if (formKey.currentState!.validate()) {
+                      await dbHelper.insertDomino(
+                          Domino(date: pickedDate, content: content));
                       Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => MainAddedPage(dominoValue),
+                            //builder: (context) => MainAddedPage(dominoValue),
+                            builder: (context) => const MyApp(),
                           ));
                       formKey.currentState!.save();
                     }
@@ -196,11 +186,120 @@ class _AddPage2State extends State<AddPage2> {
                     style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
                 )
-              ])
+              ]),
+              FutureBuilder(
+                future: dominos,
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return Text('Error: ${snapshot.error}');
+                  } else {
+                    List<Domino> dominoList = snapshot.data as List<Domino>;
+                    return Expanded(
+                      child: ListView.builder(
+                        itemCount: dominoList.length,
+                        itemBuilder: (context, index) {
+                          return ListTile(
+                            title: Text(dominoList[index].content),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.edit),
+                                  onPressed: () {
+                                    _editDomino(context, dominoList[index]);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.delete),
+                                  onPressed: () {
+                                    _deleteDomino(context, dominoList[index]);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    );
+                  }
+                },
+              ),
             ],
           ),
         ]),
       ),
+    );
+  }
+
+  void _editDomino(BuildContext context, Domino domino) {
+    dominoController.text = domino.content;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Edit Domino'),
+          content: TextField(
+            controller: dominoController,
+            decoration:
+                const InputDecoration(hintText: 'Enter your edited todo'),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                String content = dominoController.text;
+                if (content.isNotEmpty) {
+                  domino.content = content;
+                  await dbHelper.updateDomino(domino);
+                  Navigator.pop(context);
+                  setState(() {
+                    dominos = dbHelper.getDominos();
+                  });
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _deleteDomino(BuildContext context, Domino domino) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Delete Todo'),
+          content: const Text('Are you sure you want to delete this todo?'),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                await dbHelper.deleteDomino(domino.id);
+                Navigator.pop(context);
+                setState(() {
+                  dominos = dbHelper.getDominos();
+                });
+              },
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
     );
   }
 }
