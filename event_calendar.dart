@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-//import 'package:intl/intl.dart';
+import 'package:flutter_application_1/repository/db_helper.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection'; //LinkedHashMap 객체 사용하기 위한 라이브러리
 import 'package:flutter_application_1/pages/add_page1.dart';
+import 'package:flutter_application_1/pages/edit_page.dart';
+
+final DatabaseHelper dbHelper = DatabaseHelper();
 
 class EventCalendar extends StatefulWidget {
   const EventCalendar({Key? key}) : super(key: key);
@@ -15,7 +18,7 @@ class _EventCalendarState extends State<EventCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
-  bool isClicked = false;
+  late Future<List<Domino>> dominos;
 
   late final ValueNotifier<List<Event>> _selectedEvents;
 
@@ -25,6 +28,30 @@ class _EventCalendarState extends State<EventCalendar> {
 
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+
+    // 데이터베이스에서 Domino 객체들을 가져와서 이벤트로 변환하여 추가
+    _addDominosToEvents();
+
+    // dominos 필드를 초기화합니다.
+    dominos = dbHelper.getDominos();
+  }
+
+  Future<void> _addDominosToEvents() async {
+    List<Domino> dominos = await dbHelper.getDominos();
+    for (var domino in dominos) {
+      // Domino 객체를 Event 객체로 변환하여 event 리스트에 추가
+      Event event = Event(domino.content);
+      _addEventForDay(domino.date, event);
+    }
+  }
+
+  void _addEventForDay(DateTime day, Event event) {
+    // 해당 날짜의 이벤트 목록 가져오기
+    List<Event> events = kEvents[day] ?? [];
+    // 이벤트 추가
+    events.add(event);
+    // 이벤트 목록 업데이트
+    kEvents[day] = events;
   }
 
   @override
@@ -157,87 +184,121 @@ class _EventCalendarState extends State<EventCalendar> {
                 );
               } else {
                 // 이벤트가 있는 경우
-                return ListView.builder(
-                  itemCount: value.length,
-                  itemBuilder: (context, index) {
-                    return Container(
-                        height: 70,
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 12.0,
-                          vertical: 4.0,
-                        ),
-                        /*decoration: BoxDecoration(
-                          border: Border.all(),
-                          borderRadius: BorderRadius.circular(12.0),
-                        ),*/
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 22,
-                              height: 55,
-                              margin:
-                                  const EdgeInsets.symmetric(horizontal: 20),
-                              decoration: BoxDecoration(
-                                  color: Colors.red,
-                                  borderRadius: BorderRadius.circular(4)),
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Money',
-                                  style: TextStyle(color: Colors.white),
+                return FutureBuilder(
+                  future: dominos,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else {
+                      //List<Domino> dominoList = snapshot.data as List<Domino>;
+                      return Expanded(
+                          child: ListView.builder(
+                        itemCount: value.length,
+                        itemBuilder: (context, index) {
+                          return GestureDetector(
+                            child: Container(
+                                height: 70,
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                  vertical: 4.0,
                                 ),
-                                Text(
-                                  '${value[index]}',
-                                  style: const TextStyle(color: Colors.white),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(
-                              width: 50,
-                            ),
-                            IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    value[index].didZero = !value[index]
-                                        .didZero; // 해당 Event 객체의 버튼 상태 변경
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.clear_outlined,
-                                  color: value[index].didZero
-                                      ? Colors.yellow
-                                      : const Color(0xff5C5C5C),
+                                /*decoration: BoxDecoration(
+                            border: Border.all(),
+                            borderRadius: BorderRadius.circular(12.0),
+                                                    ),*/
+
+                                child: Row(
+                                  children: [
+                                    Container(
+                                      width: 22,
+                                      height: 55,
+                                      margin: const EdgeInsets.symmetric(
+                                          horizontal: 20),
+                                      decoration: BoxDecoration(
+                                          color: Colors.red,
+                                          borderRadius:
+                                              BorderRadius.circular(4)),
+                                    ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          'Money',
+                                          style: TextStyle(color: Colors.white),
+                                        ),
+                                        Text(
+                                          '${value[index]}',
+                                          style: const TextStyle(
+                                              color: Colors.white),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(
+                                      width: 50,
+                                    ),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.end,
+                                      children: [
+                                        IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                value[index].didZero = !value[
+                                                        index]
+                                                    .didZero; // 해당 Event 객체의 버튼 상태 변경
+                                                value[index].didHalf = false;
+                                                value[index].didAll = false;
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.clear_outlined,
+                                              color: value[index].didZero
+                                                  ? Colors.yellow
+                                                  : const Color(0xff5C5C5C),
+                                            )),
+                                        IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                value[index].didHalf = !value[
+                                                        index]
+                                                    .didHalf; // 해당 Event 객체의 버튼 상태 변경
+                                                value[index].didZero = false;
+                                                value[index].didAll = false;
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.change_history_outlined,
+                                              color: value[index].didHalf
+                                                  ? Colors.yellow
+                                                  : const Color(0xff5C5C5C),
+                                            )),
+                                        IconButton(
+                                            onPressed: () {
+                                              setState(() {
+                                                value[index].didAll = !value[
+                                                        index]
+                                                    .didAll; // 해당 Event 객체의 버튼 상태 변경
+                                                value[index].didZero = false;
+                                                value[index].didHalf = false;
+                                              });
+                                            },
+                                            icon: Icon(
+                                              Icons.circle_outlined,
+                                              color: value[index].didAll
+                                                  ? Colors.yellow
+                                                  : const Color(0xff5C5C5C),
+                                            )),
+                                      ],
+                                    )
+                                  ],
                                 )),
-                            IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    value[index].didHalf = !value[index]
-                                        .didHalf; // 해당 Event 객체의 버튼 상태 변경
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.change_history_outlined,
-                                  color: value[index].didHalf
-                                      ? Colors.yellow
-                                      : const Color(0xff5C5C5C),
-                                )),
-                            IconButton(
-                                onPressed: () {
-                                  setState(() {
-                                    value[index].didAll = !value[index]
-                                        .didAll; // 해당 Event 객체의 버튼 상태 변경
-                                  });
-                                },
-                                icon: Icon(
-                                  Icons.circle_outlined,
-                                  color: value[index].didAll
-                                      ? Colors.yellow
-                                      : const Color(0xff5C5C5C),
-                                ))
-                          ],
-                        ));
+                            onLongPress: () => editDialog(context),
+                          );
+                        },
+                      ));
+                    }
                   },
                 );
               }
@@ -287,3 +348,64 @@ int getHashCode(DateTime key) {
 final kToday = DateTime.now();
 final kFirstDay = DateTime(kToday.year, kToday.month - 3, kToday.day);
 final kLastDay = DateTime(kToday.year, kToday.month + 3, kToday.day);
+
+void editDialog(BuildContext context) {
+  showDialog(
+      context: context,
+      barrierDismissible: true, // 바깥 영역 터치시 닫을지 여부
+      builder: (BuildContext context) {
+        return AlertDialog(
+          //title: const Text('팝업 메시지'),
+          backgroundColor: const Color(0xff262626),
+          content: Row(
+            children: [
+              /*Container(
+                width: 10,
+                height: 80,
+                decoration: const BoxDecoration(color: Colors.red),
+              ),*/
+              const Column(
+                children: [
+                  Text('환상적인 세계여행'),
+                  Text('Money'),
+                  Text('40만원 저금'),
+                  Text('반복'),
+                  Text('매월 목요일'),
+                ],
+              ),
+              IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const EditPage(),
+                        ));
+                  },
+                  icon: const Icon(Icons.edit))
+            ],
+          ),
+          /*content: const SingleChildScrollView(
+            child: ListBody(
+              children: <Widget>[
+                Text('Alert Dialog 테스트'),
+                Text('ok 버튼 클릭하세요'),
+              ],
+            ),
+          ),*/
+          actions: <Widget>[
+            TextButton(
+              child: const Text('ok'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              child: const Text('cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+          ],
+        );
+      });
+}
