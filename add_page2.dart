@@ -24,6 +24,11 @@ class _AddPage2State extends State<AddPage2> {
   TextEditingController dominoController =
       TextEditingController(text: "저금"); //텍스트폼필드에 기본으로 들어갈 초기 텍스트 값
 
+  bool everDay = RepeatSettingsState().everyDay;
+  bool everyWeek = RepeatSettingsState().everyWeek;
+  bool everyTwoWeek = RepeatSettingsState().everyTwoWeek;
+  bool everyMonth = RepeatSettingsState().everyMonth;
+
   //텍스트폼필드 함수 만들기
   renderTextFormField({
     required FormFieldSetter onSaved,
@@ -35,13 +40,16 @@ class _AddPage2State extends State<AddPage2> {
       controller: dominoController,
       style: const TextStyle(fontSize: 16, color: Colors.white),
       decoration: InputDecoration(
-          border: const OutlineInputBorder(),
-          suffixIcon: IconButton(
-              //텍스트 삭제 버튼
-              onPressed: () {
-                dominoController.clear();
-              },
-              icon: const Icon(Icons.clear_outlined))),
+        border: const OutlineInputBorder(),
+        suffixIcon: dominoController.text.isNotEmpty
+            ? IconButton(
+                onPressed: () {
+                  dominoController.clear();
+                },
+                icon: const Icon(Icons.clear_outlined),
+              )
+            : null,
+      ),
     );
   }
 
@@ -168,10 +176,9 @@ class _AddPage2State extends State<AddPage2> {
                     if (formKey.currentState!.validate()) {
                       await dbHelper.insertDomino(
                           Domino(date: pickedDate, content: content));
-                      Navigator.push(
+                      Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            //builder: (context) => MainAddedPage(dominoValue),
                             builder: (context) => const MyApp(),
                           ));
                       formKey.currentState!.save();
@@ -187,45 +194,6 @@ class _AddPage2State extends State<AddPage2> {
                   ),
                 )
               ]),
-              FutureBuilder(
-                future: dominos,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator();
-                  } else if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  } else {
-                    List<Domino> dominoList = snapshot.data as List<Domino>;
-                    return Expanded(
-                      child: ListView.builder(
-                        itemCount: dominoList.length,
-                        itemBuilder: (context, index) {
-                          return ListTile(
-                            title: Text(dominoList[index].content),
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
-                                  icon: const Icon(Icons.edit),
-                                  onPressed: () {
-                                    _editDomino(context, dominoList[index]);
-                                  },
-                                ),
-                                IconButton(
-                                  icon: const Icon(Icons.delete),
-                                  onPressed: () {
-                                    _deleteDomino(context, dominoList[index]);
-                                  },
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  }
-                },
-              ),
             ],
           ),
         ]),
@@ -233,7 +201,8 @@ class _AddPage2State extends State<AddPage2> {
     );
   }
 
-  void _editDomino(BuildContext context, Domino domino) {
+  /*void _editDomino(BuildContext context, Domino domino) {
+    BuildContext context = this.context; // BuildContext 저장
     dominoController.text = domino.content;
 
     showDialog(
@@ -274,6 +243,7 @@ class _AddPage2State extends State<AddPage2> {
   }
 
   void _deleteDomino(BuildContext context, Domino domino) {
+    BuildContext context = this.context; // BuildContext 저장
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -301,5 +271,5 @@ class _AddPage2State extends State<AddPage2> {
         );
       },
     );
-  }
+  }*/
 }
