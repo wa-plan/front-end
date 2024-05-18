@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/settings/settings_main.dart';
 import 'package:intl/date_symbol_data_local.dart';
 
-import 'package:flutter_application_1/widgets/nav_bar.dart';
+import 'package:flutter_application_1/todayDomino/widgets/nav_bar.dart';
 
-import 'package:flutter_application_1/widgets/event_calendar.dart';
+import 'package:flutter_application_1/todayDomino/widgets/old_event_calendar.dart';
 
 void main() async {
   await initializeDateFormatting();
@@ -23,19 +24,14 @@ class _MyAppState extends State<MyApp> {
     return const MaterialApp(
       title: 'TDYdomino',
       debugShowCheckedModeBanner: false,
-      home: Grade(),
+      home: Home(),
     );
   }
 }
 
-class Grade extends StatefulWidget {
-  const Grade({super.key});
+class Home extends StatelessWidget {
+  const Home({super.key});
 
-  @override
-  State<Grade> createState() => _GradeState();
-}
-
-class _GradeState extends State<Grade> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -53,10 +49,19 @@ class _GradeState extends State<Grade> {
           backgroundColor: const Color(0xff262626),
         ),
         backgroundColor: const Color(0xff262626),
-        body: const Column(children: [
-          Expanded(
-            child: EventCalendar(),
+        body: Column(children: [
+          const Expanded(
+            child: OldEventCalendar(),
           ),
+          TextButton(
+              onPressed: () {
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const SettingsMain(),
+                    ));
+              },
+              child: const Text('설정', style: TextStyle(color: Colors.white))),
         ]),
         bottomNavigationBar: const NavBar());
   }
