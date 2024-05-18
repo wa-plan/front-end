@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/repository/db_helper.dart';
+import 'package:flutter_application_1/todayDomino/repository/db_helper.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection'; //LinkedHashMap 객체 사용하기 위한 라이브러리
-import 'package:flutter_application_1/pages/add_page1.dart';
-import 'package:flutter_application_1/pages/edit_page.dart';
+import 'package:flutter_application_1/todayDomino/pages/add_page1.dart';
+import 'package:flutter_application_1/todayDomino/pages/edit_page.dart';
 
 final DatabaseHelper dbHelper = DatabaseHelper();
 
@@ -27,25 +27,34 @@ class _EventCalendarState extends State<EventCalendar> {
   void initState() {
     super.initState();
 
-    _EventSourceFromDatabase();
-
-    _selectedDay = _focusedDay;
-    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+    // _selectedEvents 초기화
+    //_selectedEvents = ValueNotifier([]);
 
     // 데이터베이스에서 Domino 객체들을 가져와서 이벤트로 변환하여 추가
     _addDominosToEvents();
 
+    //_EventSourceFromDatabase();
+
+    _selectedDay = _focusedDay;
+    _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
+
     // dominos 필드를 초기화합니다.
-    //dominos = dbHelper.getDominos();
+    dominos = dbHelper.getDominos();
   }
 
   Future<void> _addDominosToEvents() async {
     List<Domino> dominos = await dbHelper.getDominos();
+    //List<Event> events = [];
+
     for (var domino in dominos) {
       // Domino 객체를 Event 객체로 변환하여 event 리스트에 추가
       Event event = Event(domino);
+      //events.add(event);
       _addEventForDay(domino.date, event);
     }
+
+    // _selectedEvents 업데이트
+    //_selectedEvents.value = events;
   }
 
   void _addEventForDay(DateTime day, Event event) {
@@ -211,11 +220,6 @@ class _EventCalendarState extends State<EventCalendar> {
                                     horizontal: 12.0,
                                     vertical: 4.0,
                                   ),
-                                  /*decoration: BoxDecoration(
-                            border: Border.all(),
-                            borderRadius: BorderRadius.circular(12.0),
-                                                    ),*/
-
                                   child: Row(
                                     children: [
                                       Container(
@@ -245,7 +249,7 @@ class _EventCalendarState extends State<EventCalendar> {
                                         ],
                                       ),
                                       const SizedBox(
-                                        width: 50,
+                                        width: 100,
                                       ),
                                       Row(
                                         mainAxisAlignment:
@@ -267,6 +271,9 @@ class _EventCalendarState extends State<EventCalendar> {
                                                     ? Colors.yellow
                                                     : const Color(0xff5C5C5C),
                                               )),
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
                                           IconButton(
                                               onPressed: () {
                                                 setState(() {
@@ -283,6 +290,9 @@ class _EventCalendarState extends State<EventCalendar> {
                                                     ? Colors.yellow
                                                     : const Color(0xff5C5C5C),
                                               )),
+                                          const SizedBox(
+                                            width: 5,
+                                          ),
                                           IconButton(
                                               onPressed: () {
                                                 setState(() {
@@ -351,10 +361,6 @@ final _kEventSource = {
     ],
   });*/
 
-int getHashCode(DateTime key) {
-  return key.day * 1000000 + key.month * 10000 + key.year;
-}
-
 final kEvents = LinkedHashMap<DateTime, List<Event>>(
   equals: isSameDay,
   hashCode: getHashCode,
@@ -367,6 +373,10 @@ void _addDominoToKEventSource(Domino domino) {
   final eventList = _kEventSource[domino.date] ?? [];
   eventList.add(event);
   _kEventSource[domino.date] = eventList;
+}
+
+int getHashCode(DateTime key) {
+  return key.day * 1000000 + key.month * 10000 + key.year;
 }
 
 Future<void> _EventSourceFromDatabase() async {
