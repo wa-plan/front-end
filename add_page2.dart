@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/add_page1.dart';
-import 'package:flutter_application_1/repository/db_helper.dart';
-import 'package:flutter_application_1/widgets/add_calendar.dart';
-import 'package:flutter_application_1/widgets/repeat_settings.dart';
+import 'package:flutter_application_1/todayDomino/pages/add_page1.dart';
+import 'package:flutter_application_1/todayDomino/repository/db_helper.dart';
+//import 'package:flutter_application_1/widgets/add_calendar.dart';
+import 'package:flutter_application_1/todayDomino/widgets/repeat_settings.dart';
 import 'package:flutter_application_1/main.dart';
+import 'package:table_calendar/table_calendar.dart';
 
 class AddPage2 extends StatefulWidget {
   const AddPage2({super.key});
@@ -16,7 +17,7 @@ class _AddPage2State extends State<AddPage2> {
   bool switchValue = false;
   final formKey = GlobalKey<FormState>();
   String dominoValue = '';
-  late DateTime pickedDate;
+  late DateTime pickedDate = DateTime.now();
   //final DatabaseHelper dbHelper = DatabaseHelper();
   late final DatabaseHelper dbHelper =
       DatabaseHelper(); // dbHelper를 선언과 동시에 초기화
@@ -24,10 +25,14 @@ class _AddPage2State extends State<AddPage2> {
   TextEditingController dominoController =
       TextEditingController(text: "저금"); //텍스트폼필드에 기본으로 들어갈 초기 텍스트 값
 
-  bool everDay = RepeatSettingsState().everyDay;
-  bool everyWeek = RepeatSettingsState().everyWeek;
-  bool everyTwoWeek = RepeatSettingsState().everyTwoWeek;
-  bool everyMonth = RepeatSettingsState().everyMonth;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  RepeatSettingsState repeatSettings =
+      RepeatSettingsState(); // RepeatSettingsState 인스턴스 생성
+
+  DateTime getPickedDate() {
+    return pickedDate;
+  }
 
   //텍스트폼필드 함수 만들기
   renderTextFormField({
@@ -56,7 +61,6 @@ class _AddPage2State extends State<AddPage2> {
   @override
   void initState() {
     super.initState();
-    pickedDate = AddCalendarState().pickedDate;
     dominos = dbHelper.getDominos();
   }
 
@@ -129,7 +133,66 @@ class _AddPage2State extends State<AddPage2> {
                     fontSize: 19,
                     fontWeight: FontWeight.bold),
               ),
-              const AddCalendar(),
+              TableCalendar(
+                locale: 'ko-KR',
+                focusedDay: _focusedDay,
+                selectedDayPredicate: (day) {
+                  return isSameDay(_selectedDay, day);
+                },
+                onDaySelected: (selectedDay, focusedDay) {
+                  if (!isSameDay(_selectedDay, selectedDay)) {
+                    // Call `setState()` when updating the selected day
+                    //bool everyDay = repeatSettingsKey.currentState!.everyDay;
+                    setState(() {
+                      _selectedDay = selectedDay;
+                      _focusedDay = focusedDay;
+                      pickedDate = selectedDay;
+
+                      //bool everyDay = repeatSettingsKey.currentState!.everyDay;
+                      /*bool everyDay = repeatSettings.everyDay;
+                if (everyDay) {
+                  _selectedDay = selectedDay.add(const Duration(days: 1));
+                }*/
+                    });
+                    //bool repeatChoice = repeatSettingsKey.currentState!.repeatChoice();
+                    //bool everyDay = repeatSettingsKey.currentState!.everyDay;
+                  }
+                },
+                onPageChanged: (focusedDay) {
+                  _focusedDay = focusedDay;
+                },
+                calendarFormat: CalendarFormat.month,
+                calendarStyle: CalendarStyle(
+                    outsideDaysVisible: false,
+                    isTodayHighlighted: true,
+                    todayDecoration: const BoxDecoration(
+                        color: Color(0xFF5B5B5B), shape: BoxShape.circle),
+                    selectedDecoration: const BoxDecoration(
+                        color: Color(0xFFFF6767), shape: BoxShape.rectangle),
+                    defaultTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: MediaQuery.of(context).size.width * 0.035,
+                    ),
+                    weekendTextStyle: TextStyle(
+                      color: Colors.white,
+                      fontSize: MediaQuery.of(context).size.width * 0.035,
+                    )),
+                headerStyle: const HeaderStyle(
+                    formatButtonVisible: false,
+                    titleCentered: true,
+                    titleTextStyle: TextStyle(color: Colors.white),
+                    leftChevronIcon: Icon(
+                      Icons.arrow_back_ios,
+                      color: Colors.white,
+                    ),
+                    rightChevronIcon: Icon(
+                      Icons.arrow_forward_ios,
+                      color: Colors.white,
+                    )),
+                firstDay: DateTime.utc(2014, 1, 1),
+                lastDay: DateTime.utc(2034, 12, 31),
+              ),
+              //const AddCalendar(),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end, //오른쪽 정렬
                 children: [
@@ -176,9 +239,10 @@ class _AddPage2State extends State<AddPage2> {
                     if (formKey.currentState!.validate()) {
                       await dbHelper.insertDomino(
                           Domino(date: pickedDate, content: content));
-                      Navigator.pushReplacement(
+                      Navigator.push(
                           context,
                           MaterialPageRoute(
+                            //builder: (context) => MainAddedPage(dominoValue),
                             builder: (context) => const MyApp(),
                           ));
                       formKey.currentState!.save();
@@ -192,7 +256,14 @@ class _AddPage2State extends State<AddPage2> {
                     '완료',
                     style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
-                )
+                ),
+
+                ElevatedButton(
+                    //onPressed: dbHelper.deleteAllDominos,
+                    onPressed: () {
+                      dbHelper.deleteAllDominos();
+                    },
+                    child: const Text('도미노 모두 삭제'))
               ]),
             ],
           ),
@@ -201,7 +272,7 @@ class _AddPage2State extends State<AddPage2> {
     );
   }
 
-  /*void _editDomino(BuildContext context, Domino domino) {
+  void _editDomino(BuildContext context, Domino domino) {
     BuildContext context = this.context; // BuildContext 저장
     dominoController.text = domino.content;
 
@@ -271,5 +342,5 @@ class _AddPage2State extends State<AddPage2> {
         );
       },
     );
-  }*/
+  }
 }

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/pages/add_page1.dart';
-import 'package:flutter_application_1/repository/db_helper.dart';
-import 'package:flutter_application_1/widgets/add_calendar.dart';
-import 'package:flutter_application_1/widgets/repeat_settings.dart';
+import 'package:flutter_application_1/todayDomino/pages/add_page1.dart';
+import 'package:flutter_application_1/todayDomino/repository/db_helper.dart';
+import 'package:flutter_application_1/todayDomino/widgets/add_calendar.dart';
+import 'package:flutter_application_1/todayDomino/widgets/repeat_settings.dart';
 import 'package:flutter_application_1/main.dart';
 
 class EditPage extends StatefulWidget {
@@ -161,8 +161,24 @@ class _EditPageState extends State<EditPage> {
                     '이전',
                     style: TextStyle(color: Colors.white, fontSize: 15),
                   ),
+                ), //이전 버튼
+                TextButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const AddPage1(),
+                        ));
+                  },
+                  style: TextButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF6767),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6.0))),
+                  child: const Text(
+                    '취소하기',
+                    style: TextStyle(color: Colors.white, fontSize: 15),
+                  ),
                 ), //취소 버튼
-
                 TextButton(
                   //임의버튼(만다라트 대용버튼)
                   onPressed: () async {
