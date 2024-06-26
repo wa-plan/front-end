@@ -5,10 +5,19 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:flutter_application_1/todayDomino/widgets/nav_bar.dart';
 
 import 'package:flutter_application_1/todayDomino/widgets/old_event_calendar.dart';
+import 'package:provider/provider.dart';
+import 'package:flutter_application_1/provider/date_provider.dart';
 
 void main() async {
   await initializeDateFormatting();
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => DateProvider()),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -22,10 +31,7 @@ class _MyAppState extends State<MyApp> {
   @override
   Widget build(BuildContext context) {
     return const MaterialApp(
-      title: 'TDYdomino',
-      debugShowCheckedModeBanner: false,
-      home: Home(),
-    );
+        title: 'TDYdomino', debugShowCheckedModeBanner: false, home: Home());
   }
 }
 
