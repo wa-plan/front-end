@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_application_1/todayDomino/repository/db_helper.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'dart:collection'; //LinkedHashMap 객체 사용하기 위한 라이브러리
 import 'package:flutter_application_1/todayDomino/pages/add_page1.dart';
 import 'package:flutter_application_1/todayDomino/pages/edit_page.dart';
-
-final DatabaseHelper dbHelper = DatabaseHelper();
+//import 'package:provider/provider.dart';
+//import 'package:flutter_application_1/provider/date_provider.dart';
 
 class EventCalendar extends StatefulWidget {
   const EventCalendar({Key? key}) : super(key: key);
@@ -18,57 +17,14 @@ class _EventCalendarState extends State<EventCalendar> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   CalendarFormat _calendarFormat = CalendarFormat.week;
-  late Future<List<Domino>> dominos;
-  //DateTime pickedDate = AddCalendarState().pickedDate;
-
   late final ValueNotifier<List<Event>> _selectedEvents;
 
   @override
   void initState() {
     super.initState();
 
-    // _selectedEvents 초기화
-    //_selectedEvents = ValueNotifier([]);
-
-    // 데이터베이스에서 Domino 객체들을 가져와서 이벤트로 변환하여 추가
-    _addDominosToEvents();
-
-    //_EventSourceFromDatabase();
-
     _selectedDay = _focusedDay;
     _selectedEvents = ValueNotifier(_getEventsForDay(_selectedDay!));
-
-    // dominos 필드를 초기화합니다.
-    dominos = dbHelper.getDominos();
-  }
-
-  Future<void> _addDominosToEvents() async {
-    List<Domino> dominos = await dbHelper.getDominos();
-    //List<Event> events = [];
-
-    for (var domino in dominos) {
-      // Domino 객체를 Event 객체로 변환하여 event 리스트에 추가
-      Event event = Event(domino);
-      //events.add(event);
-      _addEventForDay(domino.date, event);
-    }
-
-    // _selectedEvents 업데이트
-    //_selectedEvents.value = events;
-  }
-
-  void _addEventForDay(DateTime day, Event event) {
-    // 해당 날짜의 이벤트 목록 가져오기
-    List<Event> events = _kEventSource[day] ?? [];
-    // 이벤트 추가
-    events.add(event);
-    // 이벤트 목록 업데이트
-    _kEventSource[day] = events;
-  }
-
-  List<Event> _getEventsForDay(DateTime day) {
-    // Implementation example
-    return _kEventSource[day] ?? [];
   }
 
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
@@ -103,7 +59,11 @@ class _EventCalendarState extends State<EventCalendar> {
           },
           onDaySelected: _onDaySelected,
           onPageChanged: (focusedDay) {
-            _focusedDay = focusedDay;
+            setState(() {
+              _focusedDay = focusedDay;
+              _selectedDay = focusedDay;
+              _selectedEvents.value = _getEventsForDay(_selectedDay!);
+            });
           },
           onFormatChanged: (format) {
             if (_calendarFormat != format) {
@@ -197,129 +157,111 @@ class _EventCalendarState extends State<EventCalendar> {
                 );
               } else {
                 // 이벤트가 있는 경우
-                return FutureBuilder<void>(
-                  future: dominos,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const CircularProgressIndicator(); //대기중일 때, 로딩 애니메이션
-                    } else if (snapshot.hasError) {
-                      return Text(
-                          'Error: ${snapshot.error}'); //에러가 발생하는 경우, 에러명이 텍스트로 보임
-                    } else {
-                      //데이터를 정상적으로 받아온 경우
-                      //List<Domino> dominoList = snapshot.data as List<Domino>;
-                      //List<Domino> dominos = snapshot.data!;
-                      return Expanded(
-                          child: ListView.builder(
-                        itemCount: value.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                              child: Container(
-                                  height: 70,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 12.0,
-                                    vertical: 4.0,
+
+                return ListView.builder(
+                    itemCount: value.length,
+                    itemBuilder: (context, index) {
+                      return GestureDetector(
+                          child: Container(
+                              height: 70,
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 12.0,
+                                vertical: 4.0,
+                              ),
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 22,
+                                    height: 55,
+                                    margin: const EdgeInsets.symmetric(
+                                        horizontal: 20),
+                                    decoration: BoxDecoration(
+                                        color: Colors.red,
+                                        borderRadius: BorderRadius.circular(4)),
                                   ),
-                                  child: Row(
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
-                                      Container(
-                                        width: 22,
-                                        height: 55,
-                                        margin: const EdgeInsets.symmetric(
-                                            horizontal: 20),
-                                        decoration: BoxDecoration(
-                                            color: Colors.red,
-                                            borderRadius:
-                                                BorderRadius.circular(4)),
+                                      Text(
+                                        value[index].title,
+                                        style: const TextStyle(
+                                            color: Colors.white),
                                       ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'Money',
-                                            style:
-                                                TextStyle(color: Colors.white),
-                                          ),
-                                          Text(
-                                            '${value[index]}',
-                                            style: const TextStyle(
-                                                color: Colors.white),
-                                          ),
-                                        ],
+                                      Text(
+                                        '${value[index]}',
+                                        style: const TextStyle(
+                                            color: Colors.white),
                                       ),
-                                      const SizedBox(
-                                        width: 100,
-                                      ),
-                                      Row(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.end,
-                                        children: [
-                                          IconButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  value[index].didZero = !value[
-                                                          index]
-                                                      .didZero; // 해당 Event 객체의 버튼 상태 변경
-                                                  value[index].didHalf = false;
-                                                  value[index].didAll = false;
-                                                });
-                                              },
-                                              icon: Icon(
-                                                Icons.clear_outlined,
-                                                color: value[index].didZero
-                                                    ? Colors.yellow
-                                                    : const Color(0xff5C5C5C),
-                                              )),
-                                          const SizedBox(
-                                            width: 5,
-                                          ),
-                                          IconButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  value[index].didHalf = !value[
-                                                          index]
-                                                      .didHalf; // 해당 Event 객체의 버튼 상태 변경
-                                                  value[index].didZero = false;
-                                                  value[index].didAll = false;
-                                                });
-                                              },
-                                              icon: Icon(
-                                                Icons.change_history_outlined,
-                                                color: value[index].didHalf
-                                                    ? Colors.yellow
-                                                    : const Color(0xff5C5C5C),
-                                              )),
-                                          const SizedBox(
-                                            width: 5,
-                                          ),
-                                          IconButton(
-                                              onPressed: () {
-                                                setState(() {
-                                                  value[index].didAll = !value[
-                                                          index]
-                                                      .didAll; // 해당 Event 객체의 버튼 상태 변경
-                                                  value[index].didZero = false;
-                                                  value[index].didHalf = false;
-                                                });
-                                              },
-                                              icon: Icon(
-                                                Icons.circle_outlined,
-                                                color: value[index].didAll
-                                                    ? Colors.yellow
-                                                    : const Color(0xff5C5C5C),
-                                              )),
-                                        ],
-                                      )
                                     ],
-                                  )),
-                              onLongPress: () => editDialog(
-                                  context, value[index].domino.content));
-                        },
-                      ));
-                    }
-                  },
-                );
+                                  ),
+                                  const SizedBox(
+                                    width: 100,
+                                  ),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.end,
+                                    children: [
+                                      IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              value[index].didZero = !value[
+                                                      index]
+                                                  .didZero; // 해당 Event 객체의 버튼 상태 변경
+                                              value[index].didHalf = false;
+                                              value[index].didAll = false;
+                                            });
+                                          },
+                                          icon: Icon(
+                                            Icons.clear_outlined,
+                                            color: value[index].didZero
+                                                ? Colors.yellow
+                                                : const Color(0xff5C5C5C),
+                                          )),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              value[index].didHalf = !value[
+                                                      index]
+                                                  .didHalf; // 해당 Event 객체의 버튼 상태 변경
+                                              value[index].didZero = false;
+                                              value[index].didAll = false;
+                                            });
+                                          },
+                                          icon: Icon(
+                                            Icons.change_history_outlined,
+                                            color: value[index].didHalf
+                                                ? Colors.yellow
+                                                : const Color(0xff5C5C5C),
+                                          )),
+                                      const SizedBox(
+                                        width: 5,
+                                      ),
+                                      IconButton(
+                                          onPressed: () {
+                                            setState(() {
+                                              value[index].didAll = !value[
+                                                      index]
+                                                  .didAll; // 해당 Event 객체의 버튼 상태 변경
+                                              value[index].didZero = false;
+                                              value[index].didHalf = false;
+                                            });
+                                          },
+                                          icon: Icon(
+                                            Icons.circle_outlined,
+                                            color: value[index].didAll
+                                                ? Colors.yellow
+                                                : const Color(0xff5C5C5C),
+                                          )),
+                                    ],
+                                  )
+                                ],
+                              )),
+                          onLongPress: () =>
+                              editDialog(context, value[index].title));
+                    });
               }
             },
           ),
@@ -330,11 +272,11 @@ class _EventCalendarState extends State<EventCalendar> {
 }
 
 class Event {
-  final Domino domino;
+  final String title;
   bool didZero, didHalf, didAll; // 버튼 상태를 저장하는 필드 추가
 
-  Event(
-    this.domino, {
+  Event({
+    required this.title,
     this.didZero = false,
     this.didHalf = false,
     this.didAll = false,
@@ -342,51 +284,26 @@ class Event {
   // 선택적 매개변수의 값을 지정하지 않으면 기본값이 사용됨
 
   @override
-  String toString() => domino.content;
+  String toString() => title;
 }
 
-/*final kEvents = LinkedHashMap<DateTime, List<Event>>(
+final _events = LinkedHashMap<DateTime, List<Event>>(
   equals: isSameDay,
   hashCode: getHashCode,
-)..addAll(_kEventSource);
+)..addAll({
+    DateTime(2024, 6, 25): [Event(title: "It's event1")],
+    DateTime(2024, 6, 26): [Event(title: "It's event1")],
+    DateTime(2024, 6, 27): [Event(title: "It's event1")],
+    DateTime(2024, 6, 28): [Event(title: "It's event1")],
+  });
 
-final _kEventSource = {
-  for (var item in List.generate(50, (index) => index))
-    DateTime.utc(kFirstDay.year, kFirstDay.month, item * 5): List.generate(
-        item % 4 + 1, (index) => Event('Event $item | ${index + 1}'))
-}..addAll({
-    kToday: [
-      Event('Today\'s Event 1'),
-      Event('Today\'s Event 2'),
-    ],
-  });*/
-
-final kEvents = LinkedHashMap<DateTime, List<Event>>(
-  equals: isSameDay,
-  hashCode: getHashCode,
-)..addAll(_kEventSource);
-
-final _kEventSource = <DateTime, List<Event>>{};
-
-void _addDominoToKEventSource(Domino domino) {
-  final event = Event(domino);
-  final eventList = _kEventSource[domino.date] ?? [];
-  eventList.add(event);
-  _kEventSource[domino.date] = eventList;
-}
+List<Event> _getEventsForDay(DateTime day) {
+  return _events[day] ?? [];
+} //eventloader에 들어가는 함수
 
 int getHashCode(DateTime key) {
   return key.day * 1000000 + key.month * 10000 + key.year;
 }
-
-Future<void> _EventSourceFromDatabase() async {
-  final List<Domino> dominos = await dbHelper.getDominos();
-  for (final domino in dominos) {
-    _addDominoToKEventSource(domino);
-  }
-}
-
-final kToday = DateTime.now();
 
 void editDialog(BuildContext context, String content) {
   showDialog(
